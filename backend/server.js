@@ -9,6 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const { getUsers, addNewUser, deleteUser } = require("./controllers/userManagement")
 const prismaClient = require("@prisma/client");
+const { getTransporters, createTransporter, deleteTransporter } = require('./controllers/transportersManagement');
 
 // Initialize Prisma Client
 const prisma = new prismaClient.PrismaClient();
@@ -72,7 +73,7 @@ app.post('/api/users/:uid/reset-password', verifyToken, requireRole(['admin']), 
 
         res.json({
             message: 'Password reset link generated',
-            resetLink // In production, you'd email this instead of returning it
+            resetLink
         });
     } catch (error) {
         console.error('Error resetting password:', error);
@@ -82,25 +83,45 @@ app.post('/api/users/:uid/reset-password', verifyToken, requireRole(['admin']), 
 
 // Bid Routes (Management Staff and Admin)
 app.get('/api/bids', verifyToken, requireRole(['admin', 'management_staff']), (req, res) => {
-    res.json([
-        { id: 1, title: 'Freight Bid 1', status: 'active', createdBy: req.user.email },
-        { id: 2, title: 'Freight Bid 2', status: 'completed', createdBy: req.user.email }
-    ]);
+    prisma.bid.findMany()
+        .then(bids => {
+            res.json({ bids, ok: true });
+        })
+        .catch(error => {
+            console.error('Error fetching bids:', error);
+            res.status(500).json({ error: 'Failed to fetch bids', ok: false });
+        });
 });
 
 app.post('/api/bids', verifyToken, requireRole(['admin', 'management_staff']), (req, res) => {
+    const { materialType, quantity, pickupLocation, deliveryLocation, deadline, transporterRequirements } = req.body;
+
     // Create bid logic here
-    res.json({ message: 'Bid created successfully', bid: req.body });
+    prisma.bid.create({
+        data: {
+            materialType,
+            quantity,
+            pickupLocation,
+            deliveryLocation,
+            deadline,
+            transporterRequirements
+        }
+    })
+        .then(bid => {
+            res.status(201).json({ message: 'Bid created successfully', bid });
+        })
+        .catch(error => {
+            console.error('Error creating bid:', error);
+            res.status(500).json({ error: 'Failed to create bid' });
+        });
 });
 
 // Transporter Routes (Management Staff and Admin)
-app.get('/api/transporters', verifyToken, requireRole(['admin', 'management_staff']), (req, res) => {
-    // Mock data - replace with database queries
-    res.json([
-        { id: 1, name: 'Transporter A', status: 'active', rating: 4.5 },
-        { id: 2, name: 'Transporter B', status: 'active', rating: 4.2 }
-    ]);
-});
+app.post('/api/transporters', verifyToken, requireRole(['admin']), createTransporter);
+
+app.get('/api/transporters', verifyToken, requireRole(['admin', 'management_staff']), getTransporters);
+
+app.delete('/api/transporters/:id', verifyToken, requireRole(['admin']), deleteTransporter);
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

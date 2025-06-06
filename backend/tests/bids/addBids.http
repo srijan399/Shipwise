@@ -1,0 +1,12 @@
+POST http://localhost:3000/api/bids
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjZlODk1YzQ3YTA0YzVmNmRlMzExMmFmZjE2ODFhMzUwNzdkMWNjZDQiLCJ0eXAiOiJKV1QifQ.eyJyb2xlIjoibWFuYWdlbWVudF9zdGFmZiIsImlzcyI6Imh0dHBzOi8vc2VjdXJldG9rZW4uZ29vZ2xlLmNvbS9zaGlwd2lzZS0zOTkiLCJhdWQiOiJzaGlwd2lzZS0zOTkiLCJhdXRoX3RpbWUiOjE3NDkyMjQ2MjEsInVzZXJfaWQiOiJJZUlmZHlnQkplVGZ5eTJqS082OXpZVHFlbG4yIiwic3ViIjoiSWVJZmR5Z0JKZVRmeXkyaktPNjl6WVRxZWxuMiIsImlhdCI6MTc0OTIyNDYyMSwiZXhwIjoxNzQ5MjI4MjIxLCJlbWFpbCI6InRlc3RAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsidGVzdEBnbWFpbC5jb20iXX0sInNpZ25faW5fcHJvdmlkZXIiOiJwYXNzd29yZCJ9fQ.H9WyytDTuwWKFY1QkN3q_PK7Jw1cSYxQMa-KxTepu3MMyFV2KxJ0RkL_awStzu8Zo59ReVsouewjJ3SbUIyNfjvIbCN8hm8CV9apqRkGzR9p2m9KbH-37N-ta9RCzRLMDJW66rLKrdtp62SrBkLWvaSiGeQTxxlLn9m4E2zlgX2d4xAKa7fOS31CNRzM3fFR5C-Ru79nQX5Jzt5Raps0ORy1h6rOyFL62SvVWGd_vy70Vcxrt6ESAmGopjWHFsOM-A__yWF1mPBSVKdHrpvaLMM5crRace4Pun0KlHDhPHlrqOWTFZoxZpP0D-RrYmqJSsWjeu81XHcbgqMhE7OeJQ
+
+ {
+    "materialType": "wood",
+    "quantity": 100,
+    "pickupLocation": "123 Pickup St, City, Country",
+    "deliveryLocation": "456 Delivery Ave, City, Country",
+    "deadline": "2023-12-31T23:59:59Z",
+    "transporterRequirements": "Must have a valid license and insurance"
+ }

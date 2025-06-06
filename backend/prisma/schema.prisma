@@ -14,3 +14,27 @@ model User {
   role      String   @default("management_staff") 
   createdAt DateTime @default(now())
 }
+
+model Bid {
+  id            String      @id @default(cuid())
+  materialType    String
+  quantity      Int
+  pickupLocation String
+  deliveryLocation String
+  deadline     DateTime
+  transporterRequirements String
+  createdAt   DateTime   @default(now())
+  transporter   Transporter? @relation(fields: [transporterId], references: [id])
+  transporterId String?
+}
+
+model Transporter {
+  id        String   @id @default(cuid())
+  name      String
+  contact   String   @unique
+  vehicleType String
+  capacity   Int
+  status     String   @default("active") @db.VarChar(8)
+  bids     Bid[]
+  createdAt DateTime @default(now())
+}
