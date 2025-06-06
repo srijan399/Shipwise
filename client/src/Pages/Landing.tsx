@@ -30,9 +30,11 @@ import {
   Flame,
   Server,
 } from "lucide-react";
+import { useNavigate } from "react-router";
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0f172a] to-[#1e3a8a] text-white relative overflow-hidden">
@@ -102,7 +104,10 @@ export default function Home() {
               </nav>
             </div>
             <div className="hidden md:flex">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 transition-all">
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 transition-all"
+                onClick={() => navigate("/auth/login")}
+              >
                 Get Started
               </Button>
             </div>
