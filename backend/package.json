@@ -6,15 +6,19 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon server.js",
-    "create-admin": "node scripts/admin.js"
+    "create-admin": "node scripts/createAdmin.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^6.9.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "firebase-admin": "^13.4.0",
-    "nodemon": "^3.1.10"
+    "makefile": "^0.0.2",
+    "nodemon": "^3.1.10",
+    "pg": "^8.16.0",
+    "prisma": "^6.8.2"
   }
 }

@@ -1,29 +1,11 @@
-// scripts/createInitialAdmin.js
-const admin = require('firebase-admin');
+const prismaClient = require("@prisma/client");
+const { admin } = require("../services/admin");
 require('dotenv').config();
-
-// Initialize Firebase Admin SDK
-if (!admin.apps.length) {
-    const serviceAccount = {
-        type: "service_account",
-        project_id: process.env.PROJECT_ID,
-        private_key_id: process.env.PRIVATE_KEY_ID,
-        private_key: process.env.PRIVATE_KEY.replace(/\\n/g, '\n'),
-        client_email: process.env.CLIENT_EMAIL,
-        client_id: process.env.CLIENT_ID,
-        auth_uri: "https://accounts.google.com/o/oauth2/auth",
-        token_uri: "https://oauth2.googleapis.com/token",
-    };
-
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        databaseURL: `https://${process.env.PROJECT_ID}-default-rtdb.firebaseio.com`
-    });
-}
 
 const createInitialAdmin = async () => {
     const adminEmail = process.env.INITIAL_ADMIN_EMAIL || 'admin@yourcompany.com';
     const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || 'password';
+    const prisma = new prismaClient.PrismaClient();
 
     try {
         console.log('Creating initial admin user...');
@@ -34,7 +16,6 @@ const createInitialAdmin = async () => {
             console.log('Admin user already exists:', existingUser.uid);
             return;
         } catch (error) {
-            // User doesn't exist, continue with creation
             if (error.code !== 'auth/user-not-found') {
                 throw error;
             }
@@ -45,7 +26,7 @@ const createInitialAdmin = async () => {
             email: adminEmail,
             password: adminPassword,
             emailVerified: true,
-            displayName: 'System Administrator'
+            displayName: 'Administrator'
         });
 
         console.log('Firebase user created:', userRecord.uid);
@@ -55,6 +36,15 @@ const createInitialAdmin = async () => {
             role: 'admin'
         });
         console.log('Custom claims set for admin role');
+
+        await prisma.user.create({
+            data: {
+                id: userRecord.uid,
+                email: adminEmail,
+                password: adminPassword,
+                role: 'admin',
+            }
+        });
 
         console.log('✅ Initial admin created successfully!');
         console.log(`Email: ${adminEmail}`);
