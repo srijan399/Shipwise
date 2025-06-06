@@ -11,7 +11,7 @@ import { useNavigate } from "react-router";
 interface AuthContextType {
   currentUser: UserData | null;
   userRole: string | null;
-  loading: boolean; // CHANGE: Added loading state to interface
+  loading: boolean;
   login: (email: string, password: string) => Promise<any>;
   logout: () => Promise<void>;
   isAdmin: boolean;
@@ -39,7 +39,7 @@ export const useAuth = () => {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, _setCurrentUser] = useState<UserData | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true); // CHANGE: Added loading state
+  const [loading, setLoading] = useState(true);
   const [token, setToken] = useState("");
 
   const navigate = useNavigate();
@@ -47,6 +47,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
+      if (!email || !password) {
+        throw new Error("Please fill in all fields");
+      }
+
+      if (currentUser) {
+        console.warn("User is already logged in:", currentUser);
+        return currentUser;
+      }
+
       const userCredential = await signInWithEmailAndPassword(
         fireAuth,
         email,
@@ -66,25 +75,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(fireAuth, async (user) => {
       try {
-        setLoading(true); // CHANGE: Set loading at start of auth state change
+        setLoading(true);
 
         if (user) {
-          // CHANGE: Set basic user info first (without role)
-          _setCurrentUser({
+          const userToken = await getIdToken(user);
+          setToken(userToken);
+
+          // Set basic user data first
+          const basicUserData = {
             uid: user.uid,
             email: user.email ?? "",
             role: "",
-          });
+          };
+          _setCurrentUser(basicUserData);
 
           try {
-            // Get token for fetch request
-            const token = await getIdToken(user);
-
-            // CHANGE: Fixed API endpoint to use consistent localhost URL
+            // Try to fetch extended user data
             const response = await fetch("http://localhost:3000/api/user", {
               method: "GET",
               headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${userToken}`,
                 "Content-Type": "application/json",
               },
             });
@@ -100,13 +110,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const userData = await response.json();
             console.log("User data fetched:", userData);
 
-            // CHANGE: Update states with complete user data
+            // Update user data with role information
             setUserRole(userData.role);
             _setCurrentUser(userData);
-            setToken(token);
 
-            // CHANGE: Moved navigation logic here to avoid race conditions
-            // Navigation happens after we have complete user data
+            // Navigate based on role
             if (userData.role === "admin") {
               navigate("/admin/dashboard");
             } else if (userData.role === "management_staff") {
@@ -114,33 +122,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           } catch (error) {
             console.error("Error fetching user data:", error);
+            // Keep basic user data and token even if API call fails
             setUserRole(null);
-            // CHANGE: Reset user data on API error but keep basic auth info
-            _setCurrentUser({
-              uid: user.uid,
-              email: user.email ?? "",
-              role: "",
-            });
+            _setCurrentUser(basicUserData);
+            // Token is already set above, so it won't be empty
           }
         } else {
-          // CHANGE: Clear all user data when signed out
+          // Clear all state when user is not authenticated
           _setCurrentUser(null);
           setUserRole(null);
+          setToken("");
         }
       } finally {
-        setLoading(false); // CHANGE: Always reset loading state
+        setLoading(false);
       }
     });
 
     return unsubscribe;
-  }, [navigate]); // CHANGE: Added navigate to dependency array
+  }, [navigate]); // Removed userRole from dependency array
 
   const logout = async () => {
     try {
-      setLoading(true); // CHANGE: Set loading during logout
+      setLoading(true);
       await signOut(fireAuth);
 
-      // CHANGE: Clear states immediately for better UX
+      // Clear all state
       setUserRole(null);
       _setCurrentUser(null);
       setToken("");
@@ -150,14 +156,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Failed to logout");
       throw error;
     } finally {
-      setLoading(false); // CHANGE: Reset loading state
+      setLoading(false);
     }
   };
 
   const value = {
     currentUser,
     userRole,
-    loading, // CHANGE: Added loading to context value
+    loading,
     login,
     logout,
     isAdmin: userRole === "admin",

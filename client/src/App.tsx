@@ -5,6 +5,7 @@ import Landing from "./Pages/Landing";
 import Login from "./Pages/Auth/Login";
 import { AuthProvider } from "./context/AuthContext";
 import Dashboard from "./Pages/AdminRoutes/Dashboard";
+import StaffDashboard from "./Pages/StaffRoutes/Dashboard";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="login" element={<Login />} />
         </Route>
         <Route path="/admin/dashboard" element={<Dashboard />} />
+        <Route path="/staff/dashboard" element={<StaffDashboard />} />
       </Routes>
     </AuthProvider>
   );

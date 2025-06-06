@@ -8,12 +8,10 @@ import {
   BarChart3,
   LogOut,
   Plus,
-  // Eye,
   Trash2,
   RefreshCw,
   AlertCircle,
 } from "lucide-react";
-// import { fireAuth } from "@/lib/firebase";
 
 function Dashboard() {
   const {
@@ -23,34 +21,34 @@ function Dashboard() {
     loading: authLoading,
     token,
   } = useAuth();
+
   const [activeTab, setActiveTab] = useState("overview");
   const [users, setUsers] = useState([]);
-  const [bids, _setBids] = useState([]); // CHANGE: Fixed unused variable
-  const [transporters, _setTransporters] = useState([]); // CHANGE: Fixed unused variable
-  const [analytics, setAnalytics] = useState({}); // CHANGE: Fixed unused variable
+  const [bids, setBids] = useState([]);
+  const [transporters, setTransporters] = useState([]);
+  const [analytics, setAnalytics] = useState({});
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null); // CHANGE: Added error state
-  const [userToken, setUserToken] = useState("");
+  const [error, setError] = useState(null);
 
-  // CHANGE: Added admin role check with proper loading handling
+  // Redirect non-admin users
   useEffect(() => {
     if (!authLoading && userRole !== "admin") {
-      // Redirect non-admin users
       window.location.href = "/auth/login";
     }
   }, [userRole, authLoading]);
 
-  // CHANGE: Enhanced useEffect with proper dependency management
+  // Load data when tab changes or when we have proper auth
   useEffect(() => {
-    if (userRole === "admin" && !token) {
-      setUserToken(token);
+    if (userRole === "admin" && token && !authLoading) {
       loadDashboardData();
     }
-  }, [activeTab, userRole, token]);
+  }, [activeTab, userRole, token, authLoading]);
 
-  // CHANGE: Enhanced data loading with better error handling
   const loadDashboardData = async () => {
-    if (userRole !== "admin") return; // Extra safety check
+    if (userRole !== "admin" || !token) {
+      console.warn("Cannot load data - missing admin role or token");
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -61,7 +59,7 @@ function Dashboard() {
           await loadUsers();
           break;
         case "bids":
-          await loadBids(); // CHANGE: Added placeholder function call
+          await loadBids();
           break;
         case "transporters":
           await loadTransporters();
@@ -80,6 +78,7 @@ function Dashboard() {
       }
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
+      // setError("Failed to load dashboard data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -87,19 +86,26 @@ function Dashboard() {
 
   const loadUsers = async () => {
     try {
+      console.log("Loading users with token:", token.substring(0, 20) + "...");
+
       const response = await fetch("http://localhost:3000/api/users", {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${userToken}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
 
-      const data = await response.json();
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error("Users API error:", response.status, errorText);
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`
+        );
       }
 
+      const data = await response.json();
+      console.log("Users loaded successfully:", data);
       setUsers(data.users || []);
     } catch (error) {
       console.error("Error loading users:", error);
@@ -107,19 +113,10 @@ function Dashboard() {
     }
   };
 
-  // CHANGE: Added placeholder functions for future implementation
   const loadBids = async () => {
     try {
-      // Placeholder - will be implemented later
-      // setBids([
-      //   { id: 1, title: "Sample Bid 1", status: "active", createdBy: "Admin" },
-      //   {
-      //     id: 2,
-      //     title: "Sample Bid 2",
-      //     status: "completed",
-      //     createdBy: "Staff",
-      //   },
-      // ]);
+      // Placeholder implementation
+      console.log("Loading bids...");
     } catch (error) {
       console.error("Error loading bids:", error);
       throw error;
@@ -128,11 +125,27 @@ function Dashboard() {
 
   const loadTransporters = async () => {
     try {
-      // Placeholder - will be implemented later
-      // setTransporters([
-      //   { id: 1, name: "Transport Co. 1", status: "active", rating: 4.5 },
-      //   { id: 2, name: "Transport Co. 2", status: "inactive", rating: 3.8 },
-      // ]);
+      console.log("Loading users with token:", token.substring(0, 20) + "...");
+
+      const response = await fetch("http://localhost:3000/api/transporters", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Transporters API error:", response.status, errorText);
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`
+        );
+      }
+
+      const data = await response.json();
+      console.log("Transporters loaded successfully:", data.transporters);
+      setTransporters(data.transporters);
     } catch (error) {
       console.error("Error loading transporters:", error);
       throw error;
@@ -141,7 +154,6 @@ function Dashboard() {
 
   const loadAnalytics = async () => {
     try {
-      // Placeholder - will be implemented later
       setAnalytics({
         totalBids: 25,
         activeBids: 12,
@@ -163,7 +175,6 @@ function Dashboard() {
     }
   };
 
-  // CHANGE: Enhanced nav items with proper admin-only sections
   const navItems = [
     {
       id: "overview",
@@ -201,9 +212,7 @@ function Dashboard() {
     item.roles.includes(userRole ?? "")
   );
 
-  // CHANGE: Enhanced content rendering with better loading states
   const renderContent = () => {
-    // CHANGE: Show loading during auth check
     if (authLoading) {
       return (
         <div className="flex items-center justify-center h-64">
@@ -215,7 +224,6 @@ function Dashboard() {
       );
     }
 
-    // CHANGE: Show error state
     if (error) {
       return (
         <div className="flex items-center justify-center h-64">
@@ -249,7 +257,6 @@ function Dashboard() {
       case "overview":
         return (
           <div className="space-y-6">
-            {/* CHANGE: Enhanced overview with better layout */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
                 <div className="flex items-center">
@@ -260,9 +267,6 @@ function Dashboard() {
                     </p>
                     <p className="text-2xl font-semibold text-gray-900">
                       {bids.length}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {/* Active: {bids.filter((b) => b.status === "active").length} */}
                     </p>
                   </div>
                 </div>
@@ -278,10 +282,6 @@ function Dashboard() {
                     <p className="text-2xl font-semibold text-gray-900">
                       {transporters.length}
                     </p>
-                    {/* <p className="text-xs text-gray-500">
-                      Active:{" "}
-                      {transporters.filter((t) => t.status === "active").length}
-                    </p> */}
                   </div>
                 </div>
               </div>
@@ -308,16 +308,15 @@ function Dashboard() {
                     <p className="text-sm font-medium text-gray-600">
                       Completed Deals
                     </p>
-                    {/* <p className="text-2xl font-semibold text-gray-900">
-                      {analytics?.completedDeals || 0}
-                    </p> */}
+                    <p className="text-2xl font-semibold text-gray-900">
+                      {/* {analytics?.completedDeals || 0} */}
+                    </p>
                     <p className="text-xs text-gray-500">This month</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* CHANGE: Added quick actions section */}
             <div className="bg-white p-6 rounded-lg shadow">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Quick Actions
@@ -364,6 +363,7 @@ function Dashboard() {
           <TransportersManagement
             transporters={transporters}
             onRefresh={loadDashboardData}
+            token={token}
           />
         );
 
@@ -372,7 +372,7 @@ function Dashboard() {
           <UserManagement
             users={users}
             onRefresh={loadDashboardData}
-            userToken={userToken}
+            token={token} // Pass the context token directly
           />
         );
 
@@ -388,7 +388,6 @@ function Dashboard() {
     }
   };
 
-  // CHANGE: Don't render dashboard if not admin or still loading auth
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -483,15 +482,15 @@ function Dashboard() {
   );
 }
 
-// CHANGE: Enhanced User Management Component with delete functionality
+// Updated UserManagement component
 function UserManagement({
   users,
   onRefresh,
-  userToken,
+  token, // Use token directly from props
 }: {
   users: any;
   onRefresh: any;
-  userToken: string;
+  token: string;
 }) {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newUser, setNewUser] = useState({
@@ -501,18 +500,24 @@ function UserManagement({
   });
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState<string>("");
-  // console.log(users);
+
+  // Debug token in UserManagement
+  useEffect(() => {
+    console.log("UserManagement token:", token?.substring(0, 20) + "...");
+  }, [token]);
 
   const handleCreateUser = async (e: any) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      console.log("Creating user with token:", token?.substring(0, 20) + "...");
+
       const response = await fetch("http://localhost:3000/api/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${userToken}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           email: newUser.email,
@@ -522,13 +527,17 @@ function UserManagement({
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error("Create user error:", response.status, errorText);
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`
+        );
       }
 
       console.log("User created successfully");
       setNewUser({ email: "", password: "", role: "management_staff" });
       setShowCreateForm(false);
-      onRefresh(); // CHANGE: Refresh the user list
+      onRefresh();
     } catch (error) {
       console.error("Failed to create user:", error);
       alert("Failed to create user. Please try again.");
@@ -537,7 +546,6 @@ function UserManagement({
     }
   };
 
-  // CHANGE: Added delete user functionality
   const handleDeleteUser = async (uid: string) => {
     if (
       !confirm(
@@ -549,16 +557,22 @@ function UserManagement({
 
     setDeleteLoading(uid);
     try {
+      console.log("Deleting user with token:", token?.substring(0, 20) + "...");
+
       const response = await fetch(`http://localhost:3000/api/users/${uid}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${userToken}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error("Delete user error:", response.status, errorText);
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`
+        );
       }
 
       console.log(`User with id: ${uid} deleted successfully`);
@@ -647,7 +661,6 @@ function UserManagement({
           </div>
         )}
 
-        {/* CHANGE: Enhanced user table with delete functionality */}
         <div className="overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -732,7 +745,7 @@ function UserManagement({
   );
 }
 
-// CHANGE: Added placeholder components for future implementation
+// Placeholder components remain the same
 function BidsManagement({ bids, onRefresh }: { bids: any; onRefresh: any }) {
   return (
     <div className="bg-white shadow rounded-lg">
@@ -759,10 +772,116 @@ function BidsManagement({ bids, onRefresh }: { bids: any; onRefresh: any }) {
 function TransportersManagement({
   transporters,
   onRefresh,
+  token,
 }: {
   transporters: any;
   onRefresh: any;
+  token: string; // Add token type
 }) {
+  // console.log(transporters);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newTransporter, setNewTransporter] = useState({
+    name: "",
+    contact: "",
+    vehicleType: "",
+    capacity: "",
+    status: "active",
+  });
+  const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState<string>("");
+
+  const handleCreateTransporter = async (e: any) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      console.log(
+        "Creating transporter with token:",
+        token?.substring(0, 20) + "..."
+      );
+
+      const response = await fetch("http://localhost:3000/api/transporters", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: newTransporter.name,
+          contact: newTransporter.contact,
+          vehicleType: newTransporter.vehicleType,
+          capacity: newTransporter.capacity,
+          status: newTransporter.status,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.ok}`);
+      }
+
+      console.log("Transporter created successfully");
+      setNewTransporter({
+        name: "",
+        contact: "",
+        vehicleType: "",
+        capacity: "",
+        status: "active",
+      });
+      setShowCreateForm(false);
+      onRefresh();
+    } catch (error) {
+      console.error("Failed to create transporter:", error);
+      alert("Failed to create transporter. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteTransporter = async (id: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this transporter? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    setDeleteLoading(id);
+    try {
+      console.log(
+        "Deleting transporter with token:",
+        token?.substring(0, 20) + "..."
+      );
+
+      const response = await fetch(
+        `http://localhost:3000/api/transporters/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Delete transporter error:", response.status, errorText);
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`
+        );
+      }
+
+      console.log(`Transporter with id: ${id} deleted successfully`);
+      onRefresh();
+    } catch (error) {
+      console.error("Failed to delete transporter:", error);
+      alert("Failed to delete transporter. Please try again.");
+    } finally {
+      setDeleteLoading("");
+    }
+  };
+
   return (
     <div className="bg-white shadow rounded-lg">
       <div className="px-4 py-5 sm:p-6">
@@ -770,17 +889,183 @@ function TransportersManagement({
           <h3 className="text-lg leading-6 font-medium text-gray-900">
             Transporters Management
           </h3>
-          <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+          <button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Transporter
           </button>
         </div>
-        <div className="text-center py-8 text-gray-500">
-          Transporters management functionality will be implemented here.
-          <br />
-          <span className="text-sm">
-            ({transporters.length} sample transporters loaded)
-          </span>
+
+        {showCreateForm && (
+          <div className="mb-6 p-4 border rounded-lg bg-gray-50">
+            <h4 className="text-md font-medium text-gray-900 mb-4">
+              Create New Transporter
+            </h4>
+            <form
+              onSubmit={handleCreateTransporter}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+            >
+              <input
+                type="text"
+                placeholder="Transporter Name"
+                value={newTransporter.name}
+                onChange={(e) =>
+                  setNewTransporter({ ...newTransporter, name: e.target.value })
+                }
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Contact (Phone/Email)"
+                value={newTransporter.contact}
+                onChange={(e) =>
+                  setNewTransporter({
+                    ...newTransporter,
+                    contact: e.target.value,
+                  })
+                }
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+              <select
+                value={newTransporter.vehicleType}
+                onChange={(e) =>
+                  setNewTransporter({
+                    ...newTransporter,
+                    vehicleType: e.target.value,
+                  })
+                }
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
+                <option value="">Select Vehicle Type</option>
+                <option value="truck">Truck</option>
+                <option value="van">Van</option>
+                <option value="trailer">Trailer</option>
+                <option value="pickup">Pickup</option>
+                <option value="container">Container</option>
+              </select>
+              <input
+                type="number"
+                placeholder="Capacity (kg)"
+                value={newTransporter.capacity}
+                onChange={(e) =>
+                  setNewTransporter({
+                    ...newTransporter,
+                    capacity: e.target.value,
+                  })
+                }
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                min="1"
+                required
+              />
+              <div className="md:col-span-2 flex space-x-3">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Creating..." : "Create Transporter"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateForm(false)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        <div className="overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Contact
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Vehicle Type
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Capacity
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Created
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {transporters.map((transporter: any, index: number) => (
+                <tr key={index}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {transporter.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {transporter.contact}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 capitalize">
+                      {transporter.vehicleType}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {transporter.capacity} kg
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        transporter.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {transporter.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {transporter.createdAt
+                      ? new Date(transporter.createdAt).toLocaleDateString()
+                      : "N/A"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                    <button
+                      onClick={() => handleDeleteTransporter(transporter.id)}
+                      disabled={deleteLoading === transporter.id}
+                      className="inline-flex items-center text-red-600 hover:text-red-900 disabled:opacity-50"
+                    >
+                      {deleteLoading === transporter.id ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                      <span className="ml-1">Delete</span>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {transporters.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              No transporters found. Create your first transporter above.
+            </div>
+          )}
         </div>
       </div>
     </div>
