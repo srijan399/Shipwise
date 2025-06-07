@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,9 +40,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
@@ -62,7 +59,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Download,
-  Edit,
+  // Edit,
   Eye,
   FileText,
   Filter,
@@ -71,13 +68,14 @@ import {
   Package,
   Plus,
   Search,
-  Settings,
+  // Settings,
   TrendingUp,
   Truck,
   Upload,
-  User,
+  // User,
   X,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -91,7 +89,7 @@ interface Bid {
   status: string;
   offers: number;
   suggestedPrice?: string;
-  distance?: number; // Optional, for mock purposes
+  distance?: number;
 }
 
 const mockOffers = [
@@ -122,23 +120,23 @@ const sidebarItems = [
   { title: "Dashboard", icon: Home, url: "#" },
   { title: "Active Bids", icon: Package, url: "#" },
   { title: "Transporters", icon: Truck, url: "#" },
-  { title: "Reports", icon: FileText, url: "#" },
-  { title: "Settings", icon: Settings, url: "#" },
 ];
 
 function AppSidebar() {
   return (
     <Sidebar className="border-r border-slate-200">
       <SidebarHeader className="border-b border-slate-200 p-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-            <Truck className="h-4 w-4" />
+        <a href="/" className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+              <Truck className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Shipwise</h2>
+              <p className="text-xs text-slate-500">Shipping Platform</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">LogiFlow</h2>
-            <p className="text-xs text-slate-500">Bidding Platform</p>
-          </div>
-        </div>
+        </a>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -501,18 +499,30 @@ function BidDetailsPanel({
 }
 
 export default function StaffDashboard() {
-  const { token, loading: authLoading, userRole } = useAuth();
+  const {
+    token,
+    loading: authLoading,
+    userRole,
+    logout,
+    currentUser,
+  } = useAuth();
   const [bids, setBids] = useState([]);
-  const [selectedBid, setSelectedBid] = useState(null);
+  const [selectedBid, setSelectedBid] = useState<Bid | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && (userRole === "admin" || userRole === "staff")) {
-      window.location.href = "/auth/login";
+    const bool = userRole === "admin" || userRole === "management_staff";
+    if (!authLoading && !bool) {
+      console.warn("Unauthorized access attempt detected");
+      window.location.href = "/";
     }
   }, [userRole, authLoading]);
+
+  useEffect(() => {
+    console.log(selectedBid);
+  }, [selectedBid]);
 
   useEffect(() => {
     if (
@@ -525,12 +535,6 @@ export default function StaffDashboard() {
   }, [userRole, token, authLoading]);
 
   const fetchBids = async () => {
-    if (!authLoading && !token) {
-      console.error("No authentication token available");
-      setIsLoading(false);
-      return;
-    }
-
     try {
       setIsLoading(true);
       const response = await fetch("http://localhost:3000/api/bids", {
@@ -542,13 +546,12 @@ export default function StaffDashboard() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`Error getting bids, status: ${response.status}`);
       }
 
       const data = await response.json();
       console.log("Fetched bids:", data);
 
-      // Transform API data to match our display format with mock values for missing fields
       const transformedBids = data.bids.map((bid: any, index: number) => ({
         ...bid,
         id: bid._id || bid.id || `BID-${String(index + 1).padStart(3, "0")}`,
@@ -592,13 +595,41 @@ export default function StaffDashboard() {
   });
 
   const getStatusBadge = (status: string) => {
-    const variants = {
+    const variants: Record<
+      string,
+      "default" | "secondary" | "outline" | "destructive"
+    > = {
       Open: "default",
       "In Progress": "secondary",
       Closed: "outline",
       Expired: "destructive",
     };
     return <Badge variant={variants[status] || "default"}>{status}</Badge>;
+  };
+
+  const handleDeleteBid = async (bidId: string) => {
+    const confirmed = confirm("Are you sure you want to delete this bid?");
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/bids/${bidId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error deleting bid, status: ${response.status}`);
+      }
+
+      console.log("Bid deleted successfully:", bidId);
+      // Remove the deleted bid from the state
+      setBids((prevBids) => prevBids.filter((bid: Bid) => bid.id !== bidId));
+    } catch (error) {
+      console.error("Error deleting bid:", error);
+    }
   };
 
   return (
@@ -635,22 +666,19 @@ export default function StaffDashboard() {
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
-                        John Doe
+                        {currentUser?.email}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        john@logiflow.com
+                        {userRole}
                       </p>
+                      <Button
+                        className="text-xs text-white hover:underline mt-2"
+                        onClick={logout}
+                      >
+                        Logout
+                      </Button>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -828,8 +856,12 @@ export default function StaffDashboard() {
                                     >
                                       <Eye className="h-4 w-4" />
                                     </Button>
-                                    <Button variant="ghost" size="sm">
-                                      <Edit className="h-4 w-4" />
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteBid(bid.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
                                     </Button>
                                   </div>
                                 </TableCell>
@@ -883,14 +915,13 @@ export default function StaffDashboard() {
                   </CardContent>
                 </Card>
               </div>
-              {/* Bid Details Panel
               {selectedBid && (
                 <BidDetailsPanel
                   bid={selectedBid}
                   offers={mockOffers}
-                  onClose={() => setSelectedBid(null)}
+                  onClose={() => setSelectedBid(undefined)}
                 />
-              )} */}
+              )}
             </div>
           </div>
         </SidebarInset>

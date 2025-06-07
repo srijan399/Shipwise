@@ -1,4 +1,3 @@
-// src/components/Dashboard.jsx
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -8,10 +7,18 @@ import {
   BarChart3,
   LogOut,
   Plus,
-  Trash2,
   RefreshCw,
   AlertCircle,
+  User,
+  Menu,
+  UserCircle,
+  Key,
+  Settings,
 } from "lucide-react";
+import TransportersManagement from "./TransportersTab";
+import UserManagement from "./UserManagement";
+import { createPortal } from "react-dom";
+import { Link } from "react-router";
 
 function Dashboard() {
   const {
@@ -24,7 +31,7 @@ function Dashboard() {
 
   const [activeTab, setActiveTab] = useState("overview");
   const [users, setUsers] = useState([]);
-  const [bids, setBids] = useState([]);
+  const [bids, _setBids] = useState([]);
   const [transporters, setTransporters] = useState([]);
   const [analytics, setAnalytics] = useState({});
   const [loading, setLoading] = useState(false);
@@ -212,13 +219,15 @@ function Dashboard() {
     item.roles.includes(userRole ?? "")
   );
 
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const renderContent = () => {
     if (authLoading) {
       return (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Checking permissions...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
+            <p className="mt-4 text-gray-300">Checking permissions...</p>
           </div>
         </div>
       );
@@ -228,11 +237,11 @@ function Dashboard() {
       return (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <p className="text-red-600 mb-4">{error}</p>
+            <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+            <p className="text-red-400 mb-4">{error}</p>
             <button
               onClick={loadDashboardData}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry
@@ -246,8 +255,8 @@ function Dashboard() {
       return (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading dashboard data...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
+            <p className="mt-4 text-gray-300">Loading dashboard data...</p>
           </div>
         </div>
       );
@@ -258,42 +267,48 @@ function Dashboard() {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+              <div className="bg-slate-800/50 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-slate-700/50 hover:shadow-xl hover:border-slate-600/50 transition-all duration-300">
                 <div className="flex items-center">
-                  <FileText className="h-8 w-8 text-blue-600" />
+                  <div className="p-3 bg-blue-500/20 rounded-lg">
+                    <FileText className="h-8 w-8 text-blue-400" />
+                  </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className="text-sm font-medium text-gray-400">
                       Total Bids
                     </p>
-                    <p className="text-2xl font-semibold text-gray-900">
+                    <p className="text-2xl font-semibold text-white">
                       {bids.length}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+              <div className="bg-slate-800/50 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-slate-700/50 hover:shadow-xl hover:border-slate-600/50 transition-all duration-300">
                 <div className="flex items-center">
-                  <Truck className="h-8 w-8 text-green-600" />
+                  <div className="p-3 bg-green-500/20 rounded-lg">
+                    <Truck className="h-8 w-8 text-green-400" />
+                  </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className="text-sm font-medium text-gray-400">
                       Transporters
                     </p>
-                    <p className="text-2xl font-semibold text-gray-900">
+                    <p className="text-2xl font-semibold text-white">
                       {transporters.length}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+              <div className="bg-slate-800/50 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-slate-700/50 hover:shadow-xl hover:border-slate-600/50 transition-all duration-300">
                 <div className="flex items-center">
-                  <Users className="h-8 w-8 text-purple-600" />
+                  <div className="p-3 bg-purple-500/20 rounded-lg">
+                    <Users className="h-8 w-8 text-purple-400" />
+                  </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className="text-sm font-medium text-gray-400">
                       Total Users
                     </p>
-                    <p className="text-2xl font-semibold text-gray-900">
+                    <p className="text-2xl font-semibold text-white">
                       {users.length}
                     </p>
                     <p className="text-xs text-gray-500">System users</p>
@@ -301,14 +316,16 @@ function Dashboard() {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+              <div className="bg-slate-800/50 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-slate-700/50 hover:shadow-xl hover:border-slate-600/50 transition-all duration-300">
                 <div className="flex items-center">
-                  <BarChart3 className="h-8 w-8 text-orange-600" />
+                  <div className="p-3 bg-orange-500/20 rounded-lg">
+                    <BarChart3 className="h-8 w-8 text-orange-400" />
+                  </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className="text-sm font-medium text-gray-400">
                       Completed Deals
                     </p>
-                    <p className="text-2xl font-semibold text-gray-900">
+                    <p className="text-2xl font-semibold text-white">
                       {/* {analytics?.completedDeals || 0} */}
                     </p>
                     <p className="text-xs text-gray-500">This month</p>
@@ -317,38 +334,42 @@ function Dashboard() {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+            <div className="bg-slate-800/50 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-slate-700/50">
+              <h3 className="text-lg font-medium text-white mb-4">
                 Quick Actions
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <button
                   onClick={() => setActiveTab("users")}
-                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-center"
+                  className="p-4 border border-slate-600/50 rounded-lg hover:bg-slate-700/50 hover:border-slate-500/50 text-center transition-all duration-300 group"
                 >
-                  <Users className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                  <p className="text-sm font-medium">Manage Users</p>
+                  <Users className="h-8 w-8 text-blue-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                  <p className="text-sm font-medium text-gray-300">
+                    Manage Users
+                  </p>
                 </button>
                 <button
                   onClick={() => setActiveTab("bids")}
-                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-center"
+                  className="p-4 border border-slate-600/50 rounded-lg hover:bg-slate-700/50 hover:border-slate-500/50 text-center transition-all duration-300 group"
                 >
-                  <FileText className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                  <p className="text-sm font-medium">View Bids</p>
+                  <FileText className="h-8 w-8 text-green-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                  <p className="text-sm font-medium text-gray-300">View Bids</p>
                 </button>
                 <button
                   onClick={() => setActiveTab("transporters")}
-                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-center"
+                  className="p-4 border border-slate-600/50 rounded-lg hover:bg-slate-700/50 hover:border-slate-500/50 text-center transition-all duration-300 group"
                 >
-                  <Truck className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                  <p className="text-sm font-medium">Transporters</p>
+                  <Truck className="h-8 w-8 text-purple-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                  <p className="text-sm font-medium text-gray-300">
+                    Transporters
+                  </p>
                 </button>
                 <button
                   onClick={() => setActiveTab("analytics")}
-                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-center"
+                  className="p-4 border border-slate-600/50 rounded-lg hover:bg-slate-700/50 hover:border-slate-500/50 text-center transition-all duration-300 group"
                 >
-                  <BarChart3 className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-                  <p className="text-sm font-medium">Analytics</p>
+                  <BarChart3 className="h-8 w-8 text-orange-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                  <p className="text-sm font-medium text-gray-300">Analytics</p>
                 </button>
               </div>
             </div>
@@ -381,7 +402,7 @@ function Dashboard() {
 
       default:
         return (
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-400">
             Select a section from the sidebar
           </div>
         );
@@ -390,10 +411,10 @@ function Dashboard() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
+          <p className="mt-4 text-gray-300">Loading...</p>
         </div>
       </div>
     );
@@ -401,18 +422,18 @@ function Dashboard() {
 
   if (userRole !== "admin") {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+          <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-semibold text-white mb-2">
             Access Denied
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-400 mb-4">
             You need admin privileges to access this dashboard.
           </p>
           <button
             onClick={() => (window.location.href = "/auth/login")}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors"
           >
             Go to Login
           </button>
@@ -422,49 +443,105 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Truck className="h-8 w-8 text-blue-600 mr-3" />
-              <h1 className="text-2xl font-bold text-gray-900">
-                Admin Dashboard - Bidding & Transporter Platform
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-600">
-                <span className="font-medium">{currentUser?.email}</span>
-                <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
-                  {userRole}
-                </span>
+      <header className="relative bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 backdrop-blur-xl shadow-2xl border-b border-slate-700/30">
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5"></div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            {/* Logo and Title Section */}
+            <Link to="/" className="flex items-center">
+              <div className="flex items-center group">
+                <div className="relative p-3 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl mr-4 border border-blue-500/20 shadow-lg group-hover:shadow-blue-500/20 transition-all duration-300">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-xl blur-sm"></div>
+                  <Truck className="relative h-8 w-8 text-blue-400 group-hover:text-blue-300 transition-colors duration-300" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent">
+                    Shipwise
+                  </h1>
+                  <p className="text-sm text-gray-400 font-medium">
+                    Admin Dashboard
+                  </p>
+                </div>
               </div>
-              <button
-                onClick={handleLogout}
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-              >
-                <LogOut className="h-4 w-4 mr-1" />
-                Logout
-              </button>
+            </Link>
+
+            {/* Refresh Button */}
+
+            {/* User Info and Actions */}
+            <div className="flex items-center space-x-6">
+              {/* User Profile Section */}
+              <div className="flex items-center space-x-3 px-4 py-2 bg-slate-800/50 rounded-xl border border-slate-700/50 backdrop-blur-sm">
+                <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full border border-blue-500/30">
+                  <User className="h-5 w-5 text-blue-400" />
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-medium text-white">
+                    {currentUser?.email || "Admin User"}
+                  </div>
+                  <div className="text-xs text-gray-400">{userRole}</div>
+                </div>
+              </div>
+
+              {/* Hamburger Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="group relative inline-flex items-center justify-center w-10 h-10 bg-gradient-to-br from-slate-700/50 to-slate-800/50 hover:from-slate-600/50 hover:to-slate-700/50 border border-slate-600/50 hover:border-slate-500/50 rounded-xl text-gray-300 hover:text-white transition-all duration-300 shadow-lg hover:shadow-slate-500/20"
+                >
+                  <Menu className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                </button>
+
+                {isMenuOpen && (
+                  <DropdownPortal>
+                    {/* Backdrop */}
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setIsMenuOpen(false)}
+                    ></div>
+
+                    {/* Menu Content */}
+                    <div className="fixed right-6 top-16 z-50 w-56 bg-slate-800/95 backdrop-blur-xl rounded-xl shadow-2xl border border-slate-700/50 py-2">
+                      <div className="absolute inset-0 bg-gradient-to-br from-slate-700/20 to-slate-900/20 rounded-xl"></div>
+
+                      <div className="relative z-10">
+                        <button className="w-full flex items-center px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-slate-700/50 transition-all duration-200">
+                          <UserCircle className="h-4 w-4 mr-3" />
+                          Profile Settings
+                        </button>
+                        <button className="w-full flex items-center px-4 py-3 text-sm text-red-300 hover:text-red-200 hover:bg-red-500/10 transition-all duration-200">
+                          <LogOut className="h-4 w-4 mr-3" />
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  </DropdownPortal>
+                )}
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Bottom accent line */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex">
           {/* Sidebar */}
-          <div className="w-64 bg-white rounded-lg shadow p-6 mr-8">
+          <div className="w-64 bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg p-6 mr-8 border border-slate-700/50">
             <nav className="space-y-2">
               {filteredNavItems.map((item, index) => (
                 <button
                   key={index}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center px-3 py-2 text-left text-sm font-medium rounded-md transition-colors ${
+                  className={`w-full flex items-center px-4 py-3 text-left text-sm font-medium rounded-lg transition-all duration-300 ${
                     activeTab === item.id
-                      ? "bg-blue-100 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-50"
+                      ? "bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-lg"
+                      : "text-gray-300 hover:bg-slate-700/50 hover:text-white"
                   }`}
                 >
                   <item.icon className="h-5 w-5 mr-3" />
@@ -483,267 +560,267 @@ function Dashboard() {
 }
 
 // Updated UserManagement component
-function UserManagement({
-  users,
-  onRefresh,
-  token, // Use token directly from props
-}: {
-  users: any;
-  onRefresh: any;
-  token: string;
-}) {
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newUser, setNewUser] = useState({
-    email: "",
-    password: "",
-    role: "management_staff",
-  });
-  const [loading, setLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState<string>("");
+// function UserManagement({
+//   users,
+//   onRefresh,
+//   token, // Use token directly from props
+// }: {
+//   users: any;
+//   onRefresh: any;
+//   token: string;
+// }) {
+//   const [showCreateForm, setShowCreateForm] = useState(false);
+//   const [newUser, setNewUser] = useState({
+//     email: "",
+//     password: "",
+//     role: "management_staff",
+//   });
+//   const [loading, setLoading] = useState(false);
+//   const [deleteLoading, setDeleteLoading] = useState<string>("");
 
-  // Debug token in UserManagement
-  useEffect(() => {
-    console.log("UserManagement token:", token?.substring(0, 20) + "...");
-  }, [token]);
+//   // Debug token in UserManagement
+//   useEffect(() => {
+//     console.log("UserManagement token:", token?.substring(0, 20) + "...");
+//   }, [token]);
 
-  const handleCreateUser = async (e: any) => {
-    e.preventDefault();
-    setLoading(true);
+//   const handleCreateUser = async (e: any) => {
+//     e.preventDefault();
+//     setLoading(true);
 
-    try {
-      console.log("Creating user with token:", token?.substring(0, 20) + "...");
+//     try {
+//       console.log("Creating user with token:", token?.substring(0, 20) + "...");
 
-      const response = await fetch("http://localhost:3000/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          email: newUser.email,
-          password: newUser.password,
-          role: newUser.role,
-        }),
-      });
+//       const response = await fetch("http://localhost:3000/api/users", {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({
+//           email: newUser.email,
+//           password: newUser.password,
+//           role: newUser.role,
+//         }),
+//       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Create user error:", response.status, errorText);
-        throw new Error(
-          `HTTP error! status: ${response.status} - ${errorText}`
-        );
-      }
+//       if (!response.ok) {
+//         const errorText = await response.text();
+//         console.error("Create user error:", response.status, errorText);
+//         throw new Error(
+//           `HTTP error! status: ${response.status} - ${errorText}`
+//         );
+//       }
 
-      console.log("User created successfully");
-      setNewUser({ email: "", password: "", role: "management_staff" });
-      setShowCreateForm(false);
-      onRefresh();
-    } catch (error) {
-      console.error("Failed to create user:", error);
-      alert("Failed to create user. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+//       console.log("User created successfully");
+//       setNewUser({ email: "", password: "", role: "management_staff" });
+//       setShowCreateForm(false);
+//       onRefresh();
+//     } catch (error) {
+//       console.error("Failed to create user:", error);
+//       alert("Failed to create user. Please try again.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
 
-  const handleDeleteUser = async (uid: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this user? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
+//   const handleDeleteUser = async (uid: string) => {
+//     if (
+//       !confirm(
+//         "Are you sure you want to delete this user? This action cannot be undone."
+//       )
+//     ) {
+//       return;
+//     }
 
-    setDeleteLoading(uid);
-    try {
-      console.log("Deleting user with token:", token?.substring(0, 20) + "...");
+//     setDeleteLoading(uid);
+//     try {
+//       console.log("Deleting user with token:", token?.substring(0, 20) + "...");
 
-      const response = await fetch(`http://localhost:3000/api/users/${uid}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+//       const response = await fetch(`http://localhost:3000/api/users/${uid}`, {
+//         method: "DELETE",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Delete user error:", response.status, errorText);
-        throw new Error(
-          `HTTP error! status: ${response.status} - ${errorText}`
-        );
-      }
+//       if (!response.ok) {
+//         const errorText = await response.text();
+//         console.error("Delete user error:", response.status, errorText);
+//         throw new Error(
+//           `HTTP error! status: ${response.status} - ${errorText}`
+//         );
+//       }
 
-      console.log(`User with id: ${uid} deleted successfully`);
-      onRefresh();
-    } catch (error) {
-      console.error("Failed to delete user:", error);
-      alert("Failed to delete user. Please try again.");
-    } finally {
-      setDeleteLoading("");
-    }
-  };
+//       console.log(`User with id: ${uid} deleted successfully`);
+//       onRefresh();
+//     } catch (error) {
+//       console.error("Failed to delete user:", error);
+//       alert("Failed to delete user. Please try again.");
+//     } finally {
+//       setDeleteLoading("");
+//     }
+//   };
 
-  return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-4 py-5 sm:p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            User Management
-          </h3>
-          <button
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add User
-          </button>
-        </div>
+//   return (
+//     <div className="bg-white shadow rounded-lg">
+//       <div className="px-4 py-5 sm:p-6">
+//         <div className="flex justify-between items-center mb-4">
+//           <h3 className="text-lg leading-6 font-medium text-gray-900">
+//             User Management
+//           </h3>
+//           <button
+//             onClick={() => setShowCreateForm(!showCreateForm)}
+//             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+//           >
+//             <Plus className="h-4 w-4 mr-2" />
+//             Add User
+//           </button>
+//         </div>
 
-        {showCreateForm && (
-          <div className="mb-6 p-4 border rounded-lg bg-gray-50">
-            <h4 className="text-md font-medium text-gray-900 mb-4">
-              Create New User
-            </h4>
-            <form
-              onSubmit={handleCreateUser}
-              className="grid grid-cols-1 md:grid-cols-3 gap-4"
-            >
-              <input
-                type="email"
-                placeholder="Email"
-                value={newUser.email}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, email: e.target.value })
-                }
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-              <input
-                type="password"
-                placeholder="Password (min 6 characters)"
-                value={newUser.password}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, password: e.target.value })
-                }
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                minLength={6}
-                required
-              />
-              <select
-                value={newUser.role}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, role: e.target.value })
-                }
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="management_staff">Management Staff</option>
-                <option value="admin">Admin</option>
-              </select>
-              <div className="md:col-span-3 flex space-x-3">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? "Creating..." : "Create User"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateForm(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+//         {showCreateForm && (
+//           <div className="mb-6 p-4 border rounded-lg bg-gray-50">
+//             <h4 className="text-md font-medium text-gray-900 mb-4">
+//               Create New User
+//             </h4>
+//             <form
+//               onSubmit={handleCreateUser}
+//               className="grid grid-cols-1 md:grid-cols-3 gap-4"
+//             >
+//               <input
+//                 type="email"
+//                 placeholder="Email"
+//                 value={newUser.email}
+//                 onChange={(e) =>
+//                   setNewUser({ ...newUser, email: e.target.value })
+//                 }
+//                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+//                 required
+//               />
+//               <input
+//                 type="password"
+//                 placeholder="Password (min 6 characters)"
+//                 value={newUser.password}
+//                 onChange={(e) =>
+//                   setNewUser({ ...newUser, password: e.target.value })
+//                 }
+//                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+//                 minLength={6}
+//                 required
+//               />
+//               <select
+//                 value={newUser.role}
+//                 onChange={(e) =>
+//                   setNewUser({ ...newUser, role: e.target.value })
+//                 }
+//                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+//               >
+//                 <option value="management_staff">Management Staff</option>
+//                 <option value="admin">Admin</option>
+//               </select>
+//               <div className="md:col-span-3 flex space-x-3">
+//                 <button
+//                   type="submit"
+//                   disabled={loading}
+//                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+//                 >
+//                   {loading ? "Creating..." : "Create User"}
+//                 </button>
+//                 <button
+//                   type="button"
+//                   onClick={() => setShowCreateForm(false)}
+//                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+//                 >
+//                   Cancel
+//                 </button>
+//               </div>
+//             </form>
+//           </div>
+//         )}
 
-        <div className="overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Created
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user: any, index: number) => (
-                <tr key={index}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {user.email}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        user.role === "admin"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-blue-100 text-blue-800"
-                      }`}
-                    >
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        user.disabled
-                          ? "bg-red-100 text-red-800"
-                          : "bg-green-100 text-green-800"
-                      }`}
-                    >
-                      {user.disabled ? "Disabled" : "Active"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {user.creationTime
-                      ? new Date(user.creationTime).toLocaleDateString()
-                      : "N/A"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <button
-                      onClick={() => handleDeleteUser(user.id)}
-                      disabled={deleteLoading === user.uid}
-                      className="inline-flex items-center text-red-600 hover:text-red-900 disabled:opacity-50"
-                    >
-                      {deleteLoading === user.uid ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
-                      )}
-                      <span className="ml-1">Delete</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+//         <div className="overflow-hidden">
+//           <table className="min-w-full divide-y divide-gray-200">
+//             <thead className="bg-gray-50">
+//               <tr>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+//                   Email
+//                 </th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+//                   Role
+//                 </th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+//                   Status
+//                 </th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+//                   Created
+//                 </th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+//                   Actions
+//                 </th>
+//               </tr>
+//             </thead>
+//             <tbody className="bg-white divide-y divide-gray-200">
+//               {users.map((user: any, index: number) => (
+//                 <tr key={index}>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+//                     {user.email}
+//                   </td>
+//                   <td className="px-6 py-4 whitespace-nowrap">
+//                     <span
+//                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+//                         user.role === "admin"
+//                           ? "bg-red-100 text-red-800"
+//                           : "bg-blue-100 text-blue-800"
+//                       }`}
+//                     >
+//                       {user.role}
+//                     </span>
+//                   </td>
+//                   <td className="px-6 py-4 whitespace-nowrap">
+//                     <span
+//                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+//                         user.disabled
+//                           ? "bg-red-100 text-red-800"
+//                           : "bg-green-100 text-green-800"
+//                       }`}
+//                     >
+//                       {user.disabled ? "Disabled" : "Active"}
+//                     </span>
+//                   </td>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+//                     {user.creationTime
+//                       ? new Date(user.creationTime).toLocaleDateString()
+//                       : "N/A"}
+//                   </td>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+//                     <button
+//                       onClick={() => handleDeleteUser(user.id)}
+//                       disabled={deleteLoading === user.uid}
+//                       className="inline-flex items-center text-red-600 hover:text-red-900 disabled:opacity-50"
+//                     >
+//                       {deleteLoading === user.uid ? (
+//                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+//                       ) : (
+//                         <Trash2 className="h-4 w-4" />
+//                       )}
+//                       <span className="ml-1">Delete</span>
+//                     </button>
+//                   </td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </table>
 
-          {users.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              No users found. Create your first user above.
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+//           {users.length === 0 && (
+//             <div className="text-center py-8 text-gray-500">
+//               No users found. Create your first user above.
+//             </div>
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
 
 // Placeholder components remain the same
 function BidsManagement({ bids, onRefresh }: { bids: any; onRefresh: any }) {
@@ -763,309 +840,6 @@ function BidsManagement({ bids, onRefresh }: { bids: any; onRefresh: any }) {
           Bids management functionality will be implemented here.
           <br />
           <span className="text-sm">({bids.length} sample bids loaded)</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TransportersManagement({
-  transporters,
-  onRefresh,
-  token,
-}: {
-  transporters: any;
-  onRefresh: any;
-  token: string; // Add token type
-}) {
-  // console.log(transporters);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newTransporter, setNewTransporter] = useState({
-    name: "",
-    contact: "",
-    vehicleType: "",
-    capacity: "",
-    status: "active",
-  });
-  const [loading, setLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState<string>("");
-
-  const handleCreateTransporter = async (e: any) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      console.log(
-        "Creating transporter with token:",
-        token?.substring(0, 20) + "..."
-      );
-
-      const response = await fetch("http://localhost:3000/api/transporters", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: newTransporter.name,
-          contact: newTransporter.contact,
-          vehicleType: newTransporter.vehicleType,
-          capacity: newTransporter.capacity,
-          status: newTransporter.status,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.ok}`);
-      }
-
-      console.log("Transporter created successfully");
-      setNewTransporter({
-        name: "",
-        contact: "",
-        vehicleType: "",
-        capacity: "",
-        status: "active",
-      });
-      setShowCreateForm(false);
-      onRefresh();
-    } catch (error) {
-      console.error("Failed to create transporter:", error);
-      alert("Failed to create transporter. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteTransporter = async (id: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this transporter? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
-
-    setDeleteLoading(id);
-    try {
-      console.log(
-        "Deleting transporter with token:",
-        token?.substring(0, 20) + "..."
-      );
-
-      const response = await fetch(
-        `http://localhost:3000/api/transporters/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Delete transporter error:", response.status, errorText);
-        throw new Error(
-          `HTTP error! status: ${response.status} - ${errorText}`
-        );
-      }
-
-      console.log(`Transporter with id: ${id} deleted successfully`);
-      onRefresh();
-    } catch (error) {
-      console.error("Failed to delete transporter:", error);
-      alert("Failed to delete transporter. Please try again.");
-    } finally {
-      setDeleteLoading("");
-    }
-  };
-
-  return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-4 py-5 sm:p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Transporters Management
-          </h3>
-          <button
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Transporter
-          </button>
-        </div>
-
-        {showCreateForm && (
-          <div className="mb-6 p-4 border rounded-lg bg-gray-50">
-            <h4 className="text-md font-medium text-gray-900 mb-4">
-              Create New Transporter
-            </h4>
-            <form
-              onSubmit={handleCreateTransporter}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-            >
-              <input
-                type="text"
-                placeholder="Transporter Name"
-                value={newTransporter.name}
-                onChange={(e) =>
-                  setNewTransporter({ ...newTransporter, name: e.target.value })
-                }
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Contact (Phone/Email)"
-                value={newTransporter.contact}
-                onChange={(e) =>
-                  setNewTransporter({
-                    ...newTransporter,
-                    contact: e.target.value,
-                  })
-                }
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-              <select
-                value={newTransporter.vehicleType}
-                onChange={(e) =>
-                  setNewTransporter({
-                    ...newTransporter,
-                    vehicleType: e.target.value,
-                  })
-                }
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                required
-              >
-                <option value="">Select Vehicle Type</option>
-                <option value="truck">Truck</option>
-                <option value="van">Van</option>
-                <option value="trailer">Trailer</option>
-                <option value="pickup">Pickup</option>
-                <option value="container">Container</option>
-              </select>
-              <input
-                type="number"
-                placeholder="Capacity (kg)"
-                value={newTransporter.capacity}
-                onChange={(e) =>
-                  setNewTransporter({
-                    ...newTransporter,
-                    capacity: e.target.value,
-                  })
-                }
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                min="1"
-                required
-              />
-              <div className="md:col-span-2 flex space-x-3">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? "Creating..." : "Create Transporter"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateForm(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        <div className="overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contact
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Vehicle Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Capacity
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Created
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {transporters.map((transporter: any, index: number) => (
-                <tr key={index}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {transporter.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {transporter.contact}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 capitalize">
-                      {transporter.vehicleType}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {transporter.capacity} kg
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        transporter.status === "active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {transporter.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {transporter.createdAt
-                      ? new Date(transporter.createdAt).toLocaleDateString()
-                      : "N/A"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <button
-                      onClick={() => handleDeleteTransporter(transporter.id)}
-                      disabled={deleteLoading === transporter.id}
-                      className="inline-flex items-center text-red-600 hover:text-red-900 disabled:opacity-50"
-                    >
-                      {deleteLoading === transporter.id ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
-                      )}
-                      <span className="ml-1">Delete</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {transporters.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              No transporters found. Create your first transporter above.
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -1105,6 +879,16 @@ function AnalyticsView({ analytics }: { analytics: any }) {
       </div>
     </div>
   );
+}
+
+function DropdownPortal({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) return null;
+
+  return createPortal(children, document.body);
 }
 
 export default Dashboard;

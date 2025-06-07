@@ -198,7 +198,7 @@ export default function Home() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-blue-400/30 text-blue-200 hover:bg-blue-900/20 hover:border-blue-400/50"
+                  className="border-blue-400/30 text-black hover:bg-blue-900/20 hover:border-blue-400/50"
                 >
                   <Play className="mr-2 h-4 w-4" /> Watch Demo
                 </Button>
