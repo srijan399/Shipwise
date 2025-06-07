@@ -144,6 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       setLoading(true);
+      navigate("/");
       await signOut(fireAuth);
 
       // Clear all state

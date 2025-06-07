@@ -12,8 +12,6 @@ import {
   User,
   Menu,
   UserCircle,
-  Key,
-  Settings,
 } from "lucide-react";
 import TransportersManagement from "./TransportersTab";
 import UserManagement from "./UserManagement";
@@ -171,14 +169,6 @@ function Dashboard() {
     } catch (error) {
       console.error("Error loading analytics:", error);
       throw error;
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error("Logout error:", error);
     }
   };
 
@@ -512,7 +502,10 @@ function Dashboard() {
                           <UserCircle className="h-4 w-4 mr-3" />
                           Profile Settings
                         </button>
-                        <button className="w-full flex items-center px-4 py-3 text-sm text-red-300 hover:text-red-200 hover:bg-red-500/10 transition-all duration-200">
+                        <button
+                          className="w-full flex items-center px-4 py-3 text-sm text-red-300 hover:text-red-200 hover:bg-red-500/10 transition-all duration-200"
+                          onClick={() => logout()}
+                        >
                           <LogOut className="h-4 w-4 mr-3" />
                           Logout
                         </button>

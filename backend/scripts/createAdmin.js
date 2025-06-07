@@ -10,7 +10,6 @@ const createInitialAdmin = async () => {
     try {
         console.log('Creating initial admin user...');
 
-        // Check if user already exists
         try {
             const existingUser = await admin.auth().getUserByEmail(adminEmail);
             console.log('Admin user already exists:', existingUser.uid);
@@ -21,7 +20,6 @@ const createInitialAdmin = async () => {
             }
         }
 
-        // Create user in Firebase Auth
         const userRecord = await admin.auth().createUser({
             email: adminEmail,
             password: adminPassword,

@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -18,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -27,14 +25,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -59,25 +49,21 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Download,
-  // Edit,
   Eye,
   FileText,
   Filter,
   Home,
-  MapPin,
   Package,
-  Plus,
   Search,
-  // Settings,
   TrendingUp,
   Truck,
   Upload,
-  // User,
   X,
   Loader2,
   Trash2,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import BidCreationDialog from "./BidCreationDialog";
 
 interface Bid {
   id: string;
@@ -163,266 +149,129 @@ function AppSidebar() {
   );
 }
 
-function BidCreationDialog({ onBidCreated }: { onBidCreated: () => void }) {
-  const { token } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    materialType: "",
-    quantity: "",
-    pickupLocation: "",
-    deliveryLocation: "",
-    deadline: "",
-    transporterRequirements: "",
-  });
-
-  const calculateSuggestedPrice = () => {
-    if (
-      formData.quantity &&
-      formData.pickupLocation &&
-      formData.deliveryLocation
-    ) {
-      // Mock calculation: ₹20 per km-ton
-      const mockDistance = 500; // Mock distance
-      const price = Number.parseInt(formData.quantity) * mockDistance * 20;
-      return `₹${price.toLocaleString()}`;
-    }
-    return "₹0";
-  };
-
-  const handleSubmit = async () => {
-    if (!token) {
-      alert("Authentication token is missing");
-      return;
-    }
-
-    if (
-      !formData.materialType ||
-      !formData.quantity ||
-      !formData.pickupLocation ||
-      !formData.deliveryLocation ||
-      !formData.deadline
-    ) {
-      alert("Please fill in all required fields");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const response = await fetch("http://localhost:3000/api/bids", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          materialType: formData.materialType,
-          quantity: parseInt(formData.quantity),
-          pickupLocation: formData.pickupLocation,
-          deliveryLocation: formData.deliveryLocation,
-          deadline: new Date(formData.deadline).toISOString(),
-          transporterRequirements: formData.transporterRequirements || "",
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log("Bid created successfully:", result);
-
-      // Reset form
-      setFormData({
-        materialType: "",
-        quantity: "",
-        pickupLocation: "",
-        deliveryLocation: "",
-        deadline: "",
-        transporterRequirements: "",
-      });
-
-      setIsOpen(false);
-      onBidCreated(); // Refresh the bids list
-    } catch (error) {
-      console.error("Error creating bid:", error);
-      alert("Failed to create bid. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="mr-2 h-4 w-4" />
-          Create New Bid
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Create New Bid</DialogTitle>
-          <DialogDescription>
-            Fill in the details to create a new transportation bid.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="material">Material Type *</Label>
-            <Select
-              value={formData.materialType}
-              onValueChange={(value) =>
-                setFormData({ ...formData, materialType: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select material" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="steel">Steel</SelectItem>
-                <SelectItem value="cement">Cement</SelectItem>
-                <SelectItem value="coal">Coal</SelectItem>
-                <SelectItem value="sand">Sand</SelectItem>
-                <SelectItem value="gravel">Gravel</SelectItem>
-                <SelectItem value="wood">Wood</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="quantity">Quantity (tons) *</Label>
-            <Input
-              id="quantity"
-              type="number"
-              placeholder="Enter quantity"
-              value={formData.quantity}
-              onChange={(e) =>
-                setFormData({ ...formData, quantity: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="pickup">Pickup Location *</Label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-              <Input
-                id="pickup"
-                placeholder="123 Pickup St, City, Country"
-                className="pl-10"
-                value={formData.pickupLocation}
-                onChange={(e) =>
-                  setFormData({ ...formData, pickupLocation: e.target.value })
-                }
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="delivery">Delivery Location *</Label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-              <Input
-                id="delivery"
-                placeholder="456 Delivery Ave, City, Country"
-                className="pl-10"
-                value={formData.deliveryLocation}
-                onChange={(e) =>
-                  setFormData({ ...formData, deliveryLocation: e.target.value })
-                }
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="deadline">Deadline *</Label>
-            <Input
-              id="deadline"
-              type="datetime-local"
-              value={formData.deadline}
-              onChange={(e) =>
-                setFormData({ ...formData, deadline: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="requirements">Transporter Requirements</Label>
-            <Textarea
-              id="requirements"
-              placeholder="Must have a valid license and insurance..."
-              value={formData.transporterRequirements}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  transporterRequirements: e.target.value,
-                })
-              }
-            />
-          </div>
-
-          <div className="rounded-lg bg-blue-50 p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-blue-900">
-                Suggested Price:
-              </span>
-              <span className="text-lg font-bold text-blue-600">
-                {calculateSuggestedPrice()}
-              </span>
-            </div>
-            <p className="text-xs text-blue-700 mt-1">
-              Based on distance and quantity
-            </p>
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => setIsOpen(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                "Submit Bid"
-              )}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 function BidDetailsPanel({
   bid,
   offers,
   onClose,
+  token,
+  onBidStatusChange,
 }: {
   bid: any;
   offers: typeof mockOffers;
   onClose: () => void;
+  token: string;
+  onBidStatusChange: () => void;
 }) {
+  const [isUpdating, setIsUpdating] = useState(false);
+
   if (!bid) return null;
+
+  const handleAcceptOffer = async (
+    offerId: number,
+    transporterName: string
+  ) => {
+    setIsUpdating(true);
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/bids/${bid.id}/accept`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            offerId: offerId,
+            transporterName: transporterName,
+            status: "accepted",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error accepting offer, status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Offer accepted successfully:", data);
+
+      // Refresh the bids list
+      onBidStatusChange();
+
+      // Show success message
+      alert("Offer accepted successfully!");
+    } catch (error) {
+      console.error("Error accepting offer:", error);
+      alert("Failed to accept offer. Please try again.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCloseBid = async () => {
+    const confirmed = confirm(
+      "Are you sure you want to close this bid? This action cannot be undone."
+    );
+    if (!confirmed) return;
+
+    setIsUpdating(true);
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/bids/${bid.id}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            status: "closed",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error closing bid, status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Bid closed successfully:", data);
+
+      // Refresh the bids list
+      onBidStatusChange();
+
+      // Close the panel
+      onClose();
+
+      // Show success message
+      alert("Bid closed successfully!");
+    } catch (error) {
+      console.error("Error closing bid:", error);
+      alert("Failed to close bid. Please try again.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleNegotiate = async (offerId: number, transporterName: string) => {
+    // For now, just show an alert - you can implement a negotiation modal later
+    alert(`Negotiation feature coming soon for ${transporterName}`);
+  };
+
+  const canAcceptOffers = bid.status?.toLowerCase() === "open" || !bid.status;
+  const canCloseBid = bid.status?.toLowerCase() !== "closed";
 
   return (
     <Card className="w-80">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">Bid Details</CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            disabled={isUpdating}
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -455,12 +304,52 @@ function BidDetailsPanel({
           </div>
         </div>
 
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium text-slate-600">Status</p>
+            <Badge
+              variant={
+                bid.status?.toLowerCase() === "closed" ? "outline" : "default"
+              }
+            >
+              {bid.status || "Open"}
+            </Badge>
+          </div>
+          {canCloseBid && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleCloseBid}
+              disabled={isUpdating}
+            >
+              {isUpdating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Closing...
+                </>
+              ) : (
+                "Close Bid"
+              )}
+            </Button>
+          )}
+        </div>
+
         <Separator />
 
         <div>
           <h4 className="font-medium text-slate-900 mb-3">
             Transporter Offers ({offers.length})
           </h4>
+
+          {!canAcceptOffers && (
+            <div className="mb-3 p-2 bg-slate-100 rounded-lg">
+              <p className="text-sm text-slate-600">
+                This bid is {bid.status?.toLowerCase() || "closed"} and cannot
+                accept new offers.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-3">
             {offers.map((offer) => (
               <div key={offer.id} className="border rounded-lg p-3">
@@ -482,16 +371,42 @@ function BidDetailsPanel({
                   <Button
                     size="sm"
                     className="flex-1 bg-green-600 hover:bg-green-700"
+                    onClick={() =>
+                      handleAcceptOffer(offer.id, offer.transporter)
+                    }
+                    disabled={!canAcceptOffers || isUpdating}
                   >
-                    Accept
+                    {isUpdating ? (
+                      <>
+                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        Accepting...
+                      </>
+                    ) : (
+                      "Accept"
+                    )}
                   </Button>
-                  <Button size="sm" variant="outline" className="flex-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => handleNegotiate(offer.id, offer.transporter)}
+                    disabled={!canAcceptOffers || isUpdating}
+                  >
                     Negotiate
                   </Button>
                 </div>
               </div>
             ))}
           </div>
+
+          {offers.length === 0 && (
+            <div className="text-center py-8 text-slate-500">
+              <p className="text-sm">No offers yet</p>
+              <p className="text-xs mt-1">
+                Transporters will submit offers soon
+              </p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -920,6 +835,8 @@ export default function StaffDashboard() {
                   bid={selectedBid}
                   offers={mockOffers}
                   onClose={() => setSelectedBid(undefined)}
+                  token={token}
+                  onBidStatusChange={fetchBids}
                 />
               )}
             </div>

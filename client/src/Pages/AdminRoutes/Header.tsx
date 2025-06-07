@@ -12,6 +12,8 @@ import {
   Shield,
   TrendingUp,
 } from "lucide-react";
+// import Login from "../Auth/Login";
+import { useAuth } from "@/context/AuthContext";
 
 // Dropdown Portal Component
 function DropdownPortal({ children }: { children: React.ReactNode }) {
@@ -30,6 +32,7 @@ function ShipWiseHeader({
   userRole?: string;
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { logout } = useAuth();
 
   return (
     <header className="relative bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 backdrop-blur-xl shadow-2xl border-b border-slate-700/30 overflow-hidden">
@@ -208,7 +211,10 @@ function ShipWiseHeader({
                           System Settings
                         </button>
                         <hr className="my-2 border-slate-700/50" />
-                        <button className="w-full flex items-center px-4 py-3 text-sm text-red-300 hover:text-red-200 hover:bg-red-500/10 transition-all duration-200 group">
+                        <button
+                          className="w-full flex items-center px-4 py-3 text-sm text-red-300 hover:text-red-200 hover:bg-red-500/10 transition-all duration-200 group"
+                          onClick={() => logout()}
+                        >
                           <LogOut className="h-4 w-4 mr-3 group-hover:text-red-400 transition-colors" />
                           Sign Out
                         </button>

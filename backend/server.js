@@ -95,8 +95,6 @@ app.get('/api/bids', verifyToken, requireRole(['admin', 'management_staff']), (r
 
 app.post('/api/bids', verifyToken, requireRole(['admin', 'management_staff']), (req, res) => {
     const { materialType, quantity, pickupLocation, deliveryLocation, deadline, transporterRequirements } = req.body;
-
-    // Create bid logic here
     prisma.bid.create({
         data: {
             materialType,

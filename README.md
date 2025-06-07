@@ -1,4 +1,5 @@
 # 🚛 Shipwise – Smarter Freight, Simplified
+
 Shipwise is an internal logistics platform for managing freight bids, transporters, and manual deals with role-based access and smart pricing.
 
 🔧 Features
