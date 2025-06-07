@@ -116,6 +116,20 @@ app.post('/api/bids', verifyToken, requireRole(['admin', 'management_staff']), (
         });
 });
 
+app.delete('/api/bids/:id', verifyToken, requireRole(['admin', 'management_staff']), async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        await prisma.bid.delete({
+            where: { id: id }
+        });
+        res.json({ message: 'Bid deleted successfully', ok: true });
+    } catch (error) {
+        console.error('Error deleting bid:', error);
+        res.status(500).json({ error: 'Failed to delete bid', ok: false });
+    }
+});
+
 // Transporter Routes (Management Staff and Admin)
 app.post('/api/transporters', verifyToken, requireRole(['admin']), createTransporter);
 
